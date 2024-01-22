@@ -15,6 +15,13 @@ def home():
     return "I'm alive"
 
 
+@app.route('/api')
+
+def abc():
+
+    return "api stuff"
+
+
 
 def run():
 
