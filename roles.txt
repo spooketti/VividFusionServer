@@ -1,0 +1,4 @@
+Creator: the default role
+Admin: Admin
+
+more roles to come?
