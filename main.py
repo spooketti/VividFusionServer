@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, Response
 from threading import Thread
 from init import app
 from flask_sqlalchemy import SQLAlchemy 
@@ -34,8 +34,19 @@ def login_user():
      
     if check_password_hash(user.password, loginPW):
 
-        token = jwt.encode({'userID' : user.userID, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'], "HS256")
-        return jsonify({'token' : token}) 
+        token = jwt.encode({'userID' : user.userID, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'], "HS256")
+        resp = Response(f"Authentication Successful for {user.userID}")
+        resp.set_cookie("jwt", token,
+                                max_age=3600,
+                                secure=True,
+                                httponly=True,
+                                path='/',
+                                samesite='None'  # This is the key part for cross-site requests
+
+                                # domain="frontend.com"
+                                )
+        return resp
+
 
     return make_response('could not verify',  401, {'Authentication': '"login required"'})
 
