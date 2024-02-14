@@ -1,2 +1,3 @@
+instance/sqlite.db
 .env
 __pycache__/

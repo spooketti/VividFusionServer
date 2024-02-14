@@ -2,12 +2,12 @@ from functools import wraps
 import jwt
 from flask import request, abort
 from flask import current_app
-import model
+from model.user import Users
 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
+        token = request.cookies.get("jwt")
         if "Authorization" in request.headers:
             token = request.headers["Authorization"].split(" ")[1]
         if not token:
@@ -18,22 +18,24 @@ def token_required(f):
             }, 401
         try:
             data=jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
-            current_user=model.User().get_by_id(data["userID"])
+            current_user=Users.query.filter_by(userID=data["userID"]).first() 
+            print(current_user)
             if current_user is None:
                 return {
                 "message": "Invalid Authentication token!",
                 "data": None,
                 "error": "Unauthorized"
             }, 401
-            if not current_user["active"]:
-                abort(403)
         except Exception as e:
+            print(e)
             return {
                 "message": "Something went wrong",
                 "data": None,
                 "error": str(e)
             }, 500
 
+        print(current_user)
         return f(current_user, *args, **kwargs)
+
 
     return decorated
