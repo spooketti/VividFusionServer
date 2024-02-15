@@ -16,4 +16,4 @@ db = SQLAlchemy(app)
 # Images storage
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # maximum size of uploaded content
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif']  # supported file types
-app.config['UPLOAD_FOLDER'] = 'volumes/uploads/'  # location of user uploaded content
+app.config['UPLOAD_FOLDER'] = 'upload/'  # location of user uploaded content

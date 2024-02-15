@@ -19,7 +19,7 @@ def home():
 def signup():  
     data = request.get_json()  
     hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = Users(userID = data["userID"], password=hashed_password,name = data["name"], username=data["username"],role="Creator") 
+    new_user = Users(userID = data["userID"], password=hashed_password,name = data["name"], username=data["username"],role="Creator",pfp=data["pfp"]) 
     db.session.add(new_user)  
     db.session.commit()    
     return jsonify({'message': 'registeration successfully'})
@@ -54,6 +54,13 @@ def login_user():
 def dummy(current_user):
     print(current_user.role)
     return f"{current_user}"
+
+@app.route("/updateUser",methods=["POST"])
+@token_required
+def updateUser(current_user):
+    user = Users.query.filter_by(userID=current_user.userID).first()
+    user.update("changed!")
+    return "done"
 
 @app.before_request
 def before_request():
