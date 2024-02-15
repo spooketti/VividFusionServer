@@ -17,12 +17,22 @@ def home():
 
 @app.route('/signup', methods=['POST'])
 def signup():  
-    data = request.get_json()  
+    data = request.get_json() 
     hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = Users(userID = data["userID"], password=hashed_password,name = data["name"], username=data["username"],role="Creator",pfp=data["pfp"]) 
-    db.session.add(new_user)  
+    user = Users(userID = data["userID"], password=hashed_password,name = data["name"], username=data["username"],role="Creator",pfp=data["pfp"]) 
+    db.session.add(user)  
     db.session.commit()    
-    return jsonify({'message': 'registeration successfully'})
+    token = jwt.encode({'userID' : user.userID, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'], algorithm="HS256")
+    resp = Response('{"jwt":"'+token+'"}')
+    resp.set_cookie("jwt", token,
+                                max_age=3600,
+                                secure=True,
+                                httponly=True,
+                                path='/',
+                                samesite='None',  # This is the key part for cross-site requests
+                                domain="172.27.233.236"
+                                )
+    return resp
 
 @app.route('/login', methods=['POST'])  
 def login_user(): 
@@ -49,11 +59,15 @@ def login_user():
 
     return make_response('could not verify',  401, {'Authentication': '"login required"'})
 
-@app.route('/dummy', methods=['POST'])
+@app.route('/checkAuth', methods=['GET'])
 @token_required
-def dummy(current_user):
-    print(current_user.role)
-    return f"{current_user}"
+def checkAuth(current_user):
+    
+    return jsonify({'pfp': current_user.pfp,
+                    'name': current_user.name,
+                    "username":current_user.username,
+                    "userID":current_user.userID,
+                    "role":current_user.role})
 
 @app.route("/updateUser",methods=["POST"])
 @token_required
