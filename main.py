@@ -72,9 +72,9 @@ def checkAuth(current_user):
 @app.route("/updateUser",methods=["POST"])
 @token_required
 def updateUser(current_user):
+    data = request.get_json()
     user = Users.query.filter_by(userID=current_user.userID).first()
-    user.update("changed!")
-    return "done"
+    return user.update(data["oldPW"],data["newPW"],data["name"],data["username"],data["pfp"])
 
 @app.before_request
 def before_request():
