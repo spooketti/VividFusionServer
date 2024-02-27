@@ -7,8 +7,13 @@ import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from init import db, cors
 from model.user import Users, initUserTable
+from model.post import Posts, initPostTable
+import time
 import datetime
+import os
+import git
 
+repoDir = os.path.dirname(os.path.abspath(__file__))
 
 
 @app.route('/')
@@ -76,6 +81,62 @@ def updateUser(current_user):
     user = Users.query.filter_by(userID=current_user.userID).first()
     return user.update(data["oldPW"],data["newPW"],data["name"],data["username"],data["pfp"])
 
+@app.route("/createPost",methods=["POST"])
+@token_required
+def createPost(current_user):
+    data = request.get_json() 
+    post = Posts(userID=current_user.id,caption=data["caption"],image=data["image"],date=str(time.time()))
+    db.session.add(post)
+    db.session.commit()    
+    return "Success"
+
+@app.route('/updateServer', methods=['POST'])
+def webhook():
+        if request.method == 'POST':
+            repo = git.Repo(repoDir)
+            origin = repo.remotes.origin
+            origin.pull()
+            return 'update deployment success', 200
+        else:
+            return 'Wrong event type', 400
+
+@app.route("/deletePost",methods=["DELETE"])
+@token_required
+def deletePost(current_user):
+    data = request.get_json()
+    user = Users.query.filter_by(userID=current_user.userID).first()
+    post = Posts.query.get(data["id"])
+    if(post.userID == user.userID or user.role == "Admin"):
+        db.session.delete(post)
+        db.session.commit()
+        return "Success"
+    return "Fail"
+    
+@app.route('/getPosts', methods=['GET'])
+def get_posts():
+    page = request.args.get("page",1,type=int)
+    postsPerPage = 5
+    posts = Posts.query.paginate(page=page,per_page=postsPerPage)
+    post_list = []
+    for post in posts.items:
+        post_list.append({
+            'image': post.image,
+            'caption': post.caption,
+            'date':post.date,
+            'pfp': post.user.pfp,
+            'username':post.user.username,
+        })
+    return jsonify({'posts': post_list, 'has_next': posts.has_next})
+
+"""
+@app.route("/editPost",methods=["POST"])
+@token_required
+def editPost(current_user):
+    data = request.get_json()
+    user = Users.query.filter_by(userID=current_user.userID).first()
+    return user.update(data["oldPW"],data["newPW"],data["name"],data["username"],data["pfp"])
+"""
+
 @app.before_request
 def before_request():
     # Check if the request came from a specific origin
@@ -87,4 +148,5 @@ def run():
   app.run(host='0.0.0.0',port=8086)
 
 initUserTable()
+initPostTable()
 run()
