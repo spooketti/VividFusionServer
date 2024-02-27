@@ -125,6 +125,7 @@ def get_posts():
             'date':post.date,
             'pfp': post.user.pfp,
             'username':post.user.username,
+            'userID':post.user.userID
         })
     return jsonify({'posts': post_list, 'has_next': posts.has_next})
 

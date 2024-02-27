@@ -4,4 +4,5 @@ Flask-Migrate
 Flask-SQLAlchemy
 PyJWT
 Werkzeug
-dotenv
+python-dotenv
+GitPython
